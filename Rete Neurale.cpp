@@ -6,10 +6,13 @@
 
 using namespace std;
 
-#define Train_Set_Size 100
+#define Train_Set_Size 150
 #define PI 3.141592653589793238463
-#define N   3
-#define epsilon 0.005
+#define N   10
+
+/*Improving epsilon by trial and error*/
+#define epsilon 0.003
+
 #define epoch 80000
 
 double c[N] = {};
@@ -18,6 +21,12 @@ double V[N] = {};
 double b = 0;
 double r = rand()%10 ;
 
+/*implementing a learning rate for the function*/
+double decay_rate(int k) {
+	return(1.0f * std::exp(-0.03*k));
+}
+
+/*Creating a new activation function for the neural network*/
 double sigmoid(double x) {
 	return (1.0f / (1.0f + std::exp(-x)));
 }
@@ -31,18 +40,23 @@ double f_theta(double x) {
 }
 
 void train(double x, double y) {
+	int k = 0;
 	for (int i = 0; i < N; i++) {
-		W[i] = W[i] - epsilon * 2 * (f_theta(x) - y) * V[i] * x *
+		W[i] = W[i] - epsilon * 2 * decay_rate(k) * (f_theta(x) - y) * V[i] * x *
 			(1 - sigmoid(c[i] + W[i] * x)) * sigmoid(c[i] + W[i] * x);
 	}
+
 	for (int i = 0; i < N; i++) {
-		V[i] = V[i] - epsilon * 2 * (f_theta(x) - y) * sigmoid(c[i] + W[i] * x);
+		V[i] = V[i] - epsilon * 2 *decay_rate(k)*(f_theta(x) - y) * sigmoid(c[i] + W[i] * x);
 	}
-	b = b - epsilon * 2 * (f_theta(x) - y);
+
+	b = b - epsilon * 2 *decay_rate(k)* (f_theta(x) - y);
+
 	for (int i = 0; i < N; i++) {
-		c[i] = c[i] - epsilon * 2 * (f_theta(x) - y) * V[i] *
+		c[i] = c[i] - epsilon *  2 * decay_rate(k) * (f_theta(x) - y) * V[i] *
 			(1 - sigmoid(c[i] + W[i] * x)) * sigmoid(c[i] + W[i] * x);
 	}
+	k++;
 }
 
 int main() {
@@ -58,7 +72,7 @@ int main() {
 	trainSet.resize(Train_Set_Size);
 
 	for (int i = 0; i < Train_Set_Size; i++) {
-		trainSet[i] = make_pair(i * 2 * PI / Train_Set_Size, sin(3*i*2 * PI/Train_Set_Size));
+		trainSet[i] = make_pair(i * 2 * PI / Train_Set_Size, 2*i/Train_Set_Size   +   sin(5 * i * 2 * PI / Train_Set_Size));
 	}
 
 	for (int j = 0; j < epoch; j++) {
@@ -82,8 +96,8 @@ int main() {
 	for (int i = 0; i < 1000; i++) {
 		x.push_back(i * 2 * PI /1000);
 		
-		y1.push_back(sin(3*i * 2 * PI / 1000));
-		y2.push_back(f_theta(3*i * 2 * PI / 1000));
+		y1.push_back((2*i/1000 )+  sin(5 * i * 2 * PI / 1000));
+		y2.push_back(f_theta(i * 2 * PI / 1000));
 	}
 
 	FILE* gp = _popen("gnuplot", "w");
